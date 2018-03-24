@@ -15,14 +15,57 @@ import csv
 import json
 import os
 import sys
+import magic
+import stat
 from optparse import OptionParser
+from datetime import datetime
 
 import mft
 
 
 SIAttributeSizeXP = 72
 SIAttributeSizeNT = 48
+time_format = "%Y-%m-%d %H:%M:%S"
 
+def get_date_month_ago():
+    return datetime.strftime(datetime.now() - relativedelta(months=1), time_format)
+
+def get_file_type(filepath):
+    if os.path.isdir(filepath):
+        return "Directory"
+    return magic.from_file(filepath)
+
+def get_hash(filepath, hashtype):
+    with open(filepath,"rb") as fobj:
+        if hashtype in ["MD5", "md5"]:
+            return hashlib.md5(fobj.read()).hexdigest()
+        if hashtype == ["SHA1","sha1"]:
+            return hashlib.sha1(fobj.read()).hexdigest()
+        if hashtype == ["SHA224","sha224"]:
+            return hashlib.sha224(fobj.read()).hexdigest()
+        if hashtype == ["SHA256","sha256"]:
+            return hashlib.sha256(fobj.read()).hexdigest()
+        if hashtype == ["SHA384","sha384"]:
+            return hashlib.sha384(fobj.read()).hexdigest()
+        if hashtype == ["SHA512","sha512"]:
+            return hashlib.sha512(fobj.read()).hexdigest()
+
+def file_inspection(record, mntpath):
+# Check for mft record is active
+    if mntpath and record['flags'] & 0x0001:
+        try:
+            print record['filename']
+            # Check if target file is named pipe
+            if not stat.S_ISFIFO(os.stat(mntpath + "/" + record['filename']).st_mode):
+                record['filetype'] = get_file_type(mntpath + "/" + record['filename']).replace(",","|")
+                if os.path.getsize(mntpath + "/" + record['filename']) < 100000000:
+                    record['md5'] = get_hash(mntpath + "/" + record['filename'], "md5")
+                else:
+                    record['md5'] = "over 100MB, omitted"
+            else:
+                print record['filename']  + ": FIFO"
+        except:
+            pass
 
 class MftSession:
     """Class to describe an entire MFT processing session"""
@@ -100,7 +143,12 @@ class MftSession:
         parser.add_option("-w", "--windows-path",
                           action="store_true", dest="winpath",
                           help="File paths should use the windows path separator instead of linux")
-        
+       
+        # Patched
+        parser.add_option("-m", "--mount-point",
+                            dest="mntpath",
+                            help="Sepecify image file mount point correspond to input MFT file if you want to get file type and MD5")
+
         
         (self.options, args) = parser.parse_args()
 
@@ -111,9 +159,8 @@ class MftSession:
         else:
             self.options.date_formatter = MftSession.fmt_norm
 
+
     def open_files(self):
-       
-            
         if self.options.version:
             print("Version is: %s" % VERSION)
             sys.exit()
@@ -202,6 +249,10 @@ class MftSession:
                 print record
 
             record['filename'] = self.mft[self.num_records]['filename']
+
+            # Patched
+            if record['fncnt'] > 0 and self.options.mntpath:
+                file_inspection(record, self.options.mntpath)
 
             self.do_output(record)
 

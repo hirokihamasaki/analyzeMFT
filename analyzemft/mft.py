@@ -231,23 +231,23 @@ def mft_to_csv(record, ret_header, options):
     """Return a MFT record in CSV format"""
 
     if ret_header:
-        # Write headers
         csv_string = ['Record Number', 'Good', 'Active', 'Record type',
                       # '$Logfile Seq. Num.',
                       'Sequence Number', 'Parent File Rec. #', 'Parent File Rec. Seq. #',
-                      'Filename #1', 'Std Info Creation date', 'Std Info Modification date',
-                      'Std Info Access date', 'Std Info Entry date', 'FN Info Creation date',
-                      'FN Info Modification date', 'FN Info Access date', 'FN Info Entry date',
+                      'Filename #1', 'Std Info Creation date #1', 'Std Info Modification date',
+                      'Std Info Access date', 'Std Info Entry date', 'FN Info Creation date #1',
+                      'FN Info Modification date #1', 'FN Info Access date #1', 'FN Info Entry date #1',
                       'Object ID', 'Birth Volume ID', 'Birth Object ID', 'Birth Domain ID',
-                      'Filename #2', 'FN Info Creation date', 'FN Info Modify date',
-                      'FN Info Access date', 'FN Info Entry date', 'Filename #3', 'FN Info Creation date',
-                      'FN Info Modify date', 'FN Info Access date', 'FN Info Entry date', 'Filename #4',
-                      'FN Info Creation date', 'FN Info Modify date', 'FN Info Access date',
-                      'FN Info Entry date', 'Standard Information', 'Attribute List', 'Filename',
+                      'Filename #2', 'FN Info Creation date #2', 'FN Info Modify date #2',
+                      'FN Info Access date #2', 'FN Info Entry date #2', 'Filename #3', 'FN Info Creation date #3',
+                      'FN Info Modify date #3', 'FN Info Access date #3', 'FN Info Entry date #3', 'Filename #4',
+                      'FN Info Creation date #4', 'FN Info Modify date #4', 'FN Info Access date #4',
+                      'FN Info Entry date #4', 'Standard Information', 'Attribute List', 'Filename',
                       'Object ID', 'Volume Name', 'Volume Info', 'Data', 'Index Root',
                       'Index Allocation', 'Bitmap', 'Reparse Point', 'EA Information', 'EA',
-                      'Property Set', 'Logged Utility Stream', 'Log/Notes', 'STF FN Shift', 'uSec Zero',
-                      'ADS', 'Possible Copy', 'Possible Volume Move']
+                      'Property Set', 'Logged Utility Stream', 'Log/Notes', 'STF FN Shift', 'uSec Zero', 'ADS',
+                      'File Type', 'MD5']
+
         return csv_string
 
     if 'baad' in record:
@@ -389,6 +389,18 @@ def mft_to_csv(record, ret_header, options):
         csv_string.append('Y')
     else:
         csv_string.append('N')
+
+    # Patched
+    if 'filetype' in record:
+        csv_string.append(record['filetype'])
+    else:
+        csv_string.append('-')
+
+    if 'md5' in record:
+        csv_string.append(record['md5'])
+    else:
+        csv_string.append('-')
+
 
     return csv_string
 
