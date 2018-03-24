@@ -1,3 +1,10 @@
+fork of https://github.com/dkovar/analyzeMFT.git
+
+Changes from original
+====
+* add option -m (--mntpath), to get file type of each record and calculate md5 hash.
+
+
 ===========
 Analyze MFT
 ===========
